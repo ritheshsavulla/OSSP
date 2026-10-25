@@ -1,0 +1,1810 @@
+/* ==========================================================================
+   Ubuntu 24.04 LTS Yaru Theme - Virtual Memory, TLB & Page Table Simulator
+   ========================================================================== */
+
+:root {
+  --ubuntu-orange: #E95420;
+  --ubuntu-orange-hover: #ff6832;
+  --ubuntu-orange-glow: rgba(233, 84, 32, 0.35);
+  --ubuntu-aubergine-dark: #2C001E;
+  --ubuntu-aubergine-mid: #5E2750;
+  --ubuntu-aubergine-light: #77216F;
+  --ubuntu-green: #38B44A;
+  --ubuntu-green-glow: rgba(56, 180, 74, 0.3);
+  --ubuntu-blue: #19B6EE;
+  --ubuntu-red: #DF382C;
+  --ubuntu-yellow: #EFB73E;
+  --ubuntu-grey: #AEA79F;
+  --ubuntu-dark-grey: #333333;
+  --ubuntu-charcoal: #1E1E1E;
+  --ubuntu-jet: #111111;
+  --ubuntu-panel: rgba(20, 20, 20, 0.88);
+  --window-bg: #242424;
+  --window-header: #2E2E2E;
+  --window-border: rgba(255, 255, 255, 0.08);
+  --text-main: #FFFFFF;
+  --text-muted: #A0A0A0;
+  --text-dim: #777777;
+  --font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'Ubuntu Mono', 'Fira Code', monospace;
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-window: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-active: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--ubuntu-orange-glow);
+}
+
+/* Light Yaru Theme Variation */
+body.yaru-light {
+  --window-bg: #F7F7F7;
+  --window-header: #EBEBEB;
+  --window-border: rgba(0, 0, 0, 0.12);
+  --text-main: #111111;
+  --text-muted: #555555;
+  --text-dim: #888888;
+  --ubuntu-charcoal: #FFFFFF;
+}
+
+/* Aubergine Yaru Theme Variation */
+body.yaru-aubergine {
+  --window-bg: #271424;
+  --window-header: #381B34;
+  --window-border: rgba(233, 84, 32, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-family);
+  color: var(--text-main);
+  background-color: var(--ubuntu-aubergine-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Authentic Ubuntu Geometric Gradient Wallpaper */
+#desktop-wallpaper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  background: 
+    radial-gradient(circle at 85% 15%, rgba(233, 84, 32, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 15% 85%, rgba(119, 33, 111, 0.5) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(94, 39, 80, 0.7) 0%, transparent 60%),
+    linear-gradient(135deg, #1C0013 0%, #2C001E 40%, #5E2750 85%, #77216F 100%);
+  background-size: cover;
+  pointer-events: none;
+}
+
+/* Geometric Ubuntu Watermark Contour */
+#desktop-wallpaper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.08;
+  background-image: 
+    radial-gradient(#FFFFFF 1px, transparent 1px),
+    radial-gradient(#FFFFFF 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}
+
+/* ==========================================================================
+   Ubuntu Top Bar (GNOME Shell Panel)
+   ========================================================================== */
+#ubuntu-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: var(--ubuntu-panel);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.topbar-left, .topbar-center, .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: background var(--transition-fast);
+}
+
+.topbar-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.topbar-btn.active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.activities-badge {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+#panel-clock-time {
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+/* Topbar Status Pill (Volume, Network, Battery, Power) */
+.quick-settings-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  height: 24px;
+}
+
+.quick-settings-pill:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Quick Settings Dropdown Menu */
+.panel-menu-popup {
+  position: fixed;
+  top: 36px;
+  right: 12px;
+  width: 310px;
+  background: rgba(36, 36, 36, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-menu-popup.visible {
+  display: flex;
+  animation: menuFadeIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.menu-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.theme-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.theme-btn {
+  padding: 8px 6px;
+  font-size: 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+}
+
+.theme-btn:hover {
+  border-color: var(--ubuntu-orange);
+  background: var(--ubuntu-orange-glow);
+}
+
+/* Calendar Popup */
+.calendar-popup {
+  position: fixed;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  background: rgba(36, 36, 36, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  display: none;
+}
+
+.calendar-popup.visible {
+  display: block;
+  animation: menuFadeIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cal-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ubuntu-orange);
+  margin-bottom: 12px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.cal-day-header {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.cal-day {
+  padding: 6px 0;
+  border-radius: 50%;
+  cursor: default;
+}
+
+.cal-day.today {
+  background: var(--ubuntu-orange);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Ubuntu Left Dock (Launcher)
+   ========================================================================== */
+#ubuntu-dock {
+  position: fixed;
+  top: 32px;
+  left: 0;
+  bottom: 0;
+  width: 64px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  background: rgba(17, 17, 17, 0.88);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+}
+
+.dock-apps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  width: 100%;
+  align-items: center;
+}
+
+.dock-item {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast);
+  background: transparent;
+}
+
+.dock-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.08);
+}
+
+.dock-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+/* Running App Indicator Dot / Pill */
+.dock-item.running::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--ubuntu-orange);
+  box-shadow: 0 0 8px var(--ubuntu-orange);
+}
+
+.dock-item.active-app {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.dock-item.active-app::before {
+  height: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 0 10px #FFFFFF;
+}
+
+/* Tooltip on Hover */
+.dock-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 72px;
+  white-space: nowrap;
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(12px);
+  color: #FFFFFF;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 1002;
+}
+
+.dock-item:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Bottom Show Applications Grid */
+.dock-show-apps {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background var(--transition-fast);
+}
+
+.dock-show-apps:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ==========================================================================
+   Desktop Window System (Ubuntu Yaru Window Manager)
+   ========================================================================== */
+#desktop-area {
+  position: fixed;
+  top: 32px;
+  left: 64px;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.ubuntu-window {
+  position: absolute;
+  background: var(--window-bg);
+  border-radius: 10px;
+  box-shadow: var(--shadow-window);
+  border: 1px solid var(--window-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  min-width: 420px;
+  min-height: 280px;
+}
+
+.ubuntu-window.active-window {
+  box-shadow: var(--shadow-active);
+  border-color: rgba(233, 84, 32, 0.3);
+}
+
+.window-header {
+  height: 38px;
+  background: var(--window-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  user-select: none;
+  cursor: grab;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ubuntu-window.active-window .window-header {
+  background: linear-gradient(to right, #323232, #292929);
+}
+
+.window-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+.window-title-icon {
+  font-size: 16px;
+}
+
+/* Window Control Buttons (Close, Maximize, Minimize) */
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.win-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  line-height: 1;
+  transition: all var(--transition-fast);
+}
+
+.win-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.win-btn-close:hover {
+  background: var(--ubuntu-red);
+  color: #fff;
+}
+
+.win-btn-maximize:hover {
+  background: var(--ubuntu-orange);
+  color: #fff;
+}
+
+/* Window Content Body */
+.window-body {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Window Resize Handle */
+.resize-handle {
+  position: absolute;
+  z-index: 100;
+}
+.resize-handle-se {
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+}
+.resize-handle-s {
+  left: 0;
+  right: 16px;
+  bottom: 0;
+  height: 6px;
+  cursor: s-resize;
+}
+.resize-handle-e {
+  right: 0;
+  top: 0;
+  bottom: 16px;
+  width: 6px;
+  cursor: e-resize;
+}
+
+/* ==========================================================================
+   Yaru UI Components: Buttons, Selects, Inputs, Badges, Tables
+   ========================================================================== */
+.yaru-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.yaru-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.yaru-btn-primary {
+  background: var(--ubuntu-orange);
+  border-color: var(--ubuntu-orange);
+  color: #FFFFFF;
+}
+
+.yaru-btn-primary:hover {
+  background: var(--ubuntu-orange-hover);
+  box-shadow: 0 4px 14px var(--ubuntu-orange-glow);
+}
+
+.yaru-btn-danger {
+  background: rgba(223, 56, 44, 0.2);
+  border-color: var(--ubuntu-red);
+  color: #ff8880;
+}
+
+.yaru-btn-danger:hover {
+  background: var(--ubuntu-red);
+  color: #fff;
+}
+
+.yaru-btn-play {
+  background: #2b7a36;
+  border-color: var(--ubuntu-green);
+  color: #fff;
+}
+
+.yaru-btn-play.running {
+  background: #9c6c19;
+  border-color: var(--ubuntu-yellow);
+}
+
+.yaru-btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 5px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.yaru-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  background: #1E1E1E;
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  outline: none;
+}
+
+.yaru-select:focus {
+  border-color: var(--ubuntu-orange);
+}
+
+.yaru-select-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.yaru-input, .yaru-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: #181818;
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+.yaru-input:focus, .yaru-textarea:focus {
+  border-color: var(--ubuntu-orange);
+  box-shadow: 0 0 0 2px var(--ubuntu-orange-glow);
+}
+
+.yaru-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #333333;
+  outline: none;
+}
+
+.yaru-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ubuntu-orange);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--ubuntu-orange-glow);
+  transition: transform 0.1s;
+}
+
+.yaru-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-vpn { background: rgba(25, 182, 238, 0.2); color: #48c9f5; border: 1px solid rgba(25, 182, 238, 0.4); }
+.badge-offset { background: rgba(239, 183, 62, 0.2); color: #f5cb68; border: 1px solid rgba(239, 183, 62, 0.4); }
+.badge-frame { background: rgba(56, 180, 74, 0.2); color: #58d86c; border: 1px solid rgba(56, 180, 74, 0.4); }
+.badge-hit { background: rgba(56, 180, 74, 0.25); color: #58d86c; border: 1px solid var(--ubuntu-green); }
+.badge-miss { background: rgba(233, 84, 32, 0.25); color: #ff8559; border: 1px solid var(--ubuntu-orange); }
+.badge-swap { background: rgba(119, 33, 111, 0.35); color: #e49fe0; border: 1px solid #77216F; }
+.badge-neutral { background: rgba(255, 255, 255, 0.1); color: #DDD; }
+.badge-accent { background: var(--ubuntu-orange-glow); color: var(--ubuntu-orange); }
+
+.bit-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.bit-dirty { background: rgba(223, 56, 44, 0.3); color: #ff756b; }
+.bit-clean { background: rgba(255, 255, 255, 0.08); color: var(--text-dim); }
+.bit-ref { background: rgba(25, 182, 238, 0.25); color: #62d2fa; }
+.bit-noref { background: rgba(255, 255, 255, 0.08); color: var(--text-dim); }
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.status-valid { color: #4ade80; }
+.status-invalid { color: #888888; }
+.status-pending { color: #facc15; }
+.status-current { color: var(--ubuntu-orange); font-weight: 700; }
+
+/* Tables */
+.table-scroll-wrapper {
+  flex: 1;
+  overflow: auto;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #181818;
+}
+
+.yaru-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.yaru-table th {
+  position: sticky;
+  top: 0;
+  background: #252525;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.yaru-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+}
+
+.yaru-table tr:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.row-tlb-hit td {
+  background: rgba(56, 180, 74, 0.15) !important;
+  color: #98ffaa;
+}
+
+.row-tlb-evicted td {
+  background: rgba(223, 56, 44, 0.15) !important;
+  color: #ff9b94;
+}
+
+.row-pt-hit td {
+  background: rgba(56, 180, 74, 0.12) !important;
+}
+
+.row-pt-fault td {
+  background: rgba(223, 56, 44, 0.18) !important;
+}
+
+.mono-bold {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.text-accent { color: var(--ubuntu-orange); }
+.text-highlight { color: #38b44a; }
+.text-success { color: #4ade80; }
+.text-warning { color: #facc15; }
+.text-danger { color: #f87171; }
+.text-muted { color: var(--text-muted); }
+
+/* ==========================================================================
+   Window 1: Hardware Pipeline Visualizer Specifics
+   ========================================================================== */
+.pipeline-toolbar {
+  padding: 10px 16px;
+  background: #202020;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input-with-badge {
+  display: flex;
+  align-items: center;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.input-with-badge .prefix {
+  padding: 6px 8px;
+  background: #2A2A2A;
+  color: var(--ubuntu-orange);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.input-with-badge input {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  width: 90px;
+  outline: none;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pipeline-canvas-container {
+  padding: 16px;
+  background: #181818;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+}
+
+.hardware-flow-grid {
+  display: grid;
+  grid-template-columns: 200px 70px 220px 180px 220px 160px 220px;
+  align-items: center;
+  min-width: 1100px;
+  gap: 10px;
+}
+
+.hw-node {
+  background: #222222;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s ease;
+}
+
+.hw-node-header {
+  padding: 8px 10px;
+  background: #2A2A2A;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.node-icon { font-size: 16px; }
+.node-title { font-size: 12px; font-weight: 700; }
+
+.hw-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.badge-success { background: var(--ubuntu-green); color: #fff; }
+.badge-warning { background: var(--ubuntu-orange); color: #fff; }
+.badge-danger { background: var(--ubuntu-red); color: #fff; }
+
+.hw-node-body {
+  padding: 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.badge-address-split {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.address-hex-disp {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ubuntu-orange);
+}
+
+.address-bin-disp {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+.phys-hex {
+  color: var(--ubuntu-green);
+}
+
+/* Node Dynamic Animation States */
+.hw-node.state-hit {
+  border-color: var(--ubuntu-green);
+  box-shadow: 0 0 20px var(--ubuntu-green-glow);
+  transform: translateY(-2px);
+}
+
+.hw-node.state-miss {
+  border-color: var(--ubuntu-orange);
+  box-shadow: 0 0 20px var(--ubuntu-orange-glow);
+}
+
+.hw-node.state-fault {
+  border-color: var(--ubuntu-red);
+  box-shadow: 0 0 24px rgba(223, 56, 44, 0.5);
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.hw-node.state-access {
+  border-color: #4ade80;
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.4);
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+  40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+
+/* Bus Arrows & Signal Flow */
+.bus-arrow-horizontal {
+  position: relative;
+  height: 6px;
+  background: #333333;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bus-label {
+  position: absolute;
+  top: -16px;
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.signal-packet {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ubuntu-orange);
+  box-shadow: 0 0 10px var(--ubuntu-orange);
+  animation: flowPacket 1.5s infinite linear;
+}
+
+@keyframes flowPacket {
+  0% { left: 0%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.tlb-branch-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.branch-hit, .branch-miss {
+  padding: 6px;
+  border-radius: 6px;
+  background: #1C1C1C;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.branch-hit.active {
+  border-color: var(--ubuntu-green);
+  background: rgba(56, 180, 74, 0.1);
+}
+
+.branch-miss.active {
+  border-color: var(--ubuntu-orange);
+  background: rgba(233, 84, 32, 0.1);
+}
+
+/* Timeline Log */
+.pipeline-timeline-container {
+  flex: 1;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1C1C1C;
+  min-height: 150px;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.latency-badge {
+  padding: 4px 10px;
+  background: #282828;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ubuntu-orange);
+}
+
+.timeline-steps {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+}
+
+.timeline-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #242424;
+  border-left: 3px solid #555;
+  font-size: 12px;
+}
+
+.step-type-tlb-hit { border-left-color: var(--ubuntu-green); background: rgba(56, 180, 74, 0.08); }
+.step-type-tlb-miss { border-left-color: var(--ubuntu-orange); }
+.step-type-pt-hit { border-left-color: var(--ubuntu-green); }
+.step-type-page-fault { border-left-color: var(--ubuntu-red); background: rgba(223, 56, 44, 0.1); }
+.step-type-swap-write { border-left-color: #c084fc; }
+.step-type-mem-evict { border-left-color: var(--ubuntu-orange); }
+.step-type-complete { border-left-color: #38bdf8; }
+
+.step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.step-title {
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.step-detail {
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   Window 2 & 3: TLB & Page Table Views
+   ========================================================================== */
+.view-header-bar {
+  padding: 10px 16px;
+  background: #202020;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.view-stat-chips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #282828;
+  font-size: 12px;
+}
+
+.stat-chip .label {
+  color: var(--text-muted);
+}
+
+.stat-chip .val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.tlb-quick-config, .pt-filter-bar {
+  padding: 8px 16px;
+  background: #1A1A1A;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #141414;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.search-input-wrapper input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 12px;
+  width: 180px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.view-footer-note {
+  padding: 8px 16px;
+  background: #1E1E1E;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Two-Level Hierarchical Paging Grid */
+.two-level-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100%;
+}
+
+.level-column {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.column-header {
+  padding: 10px 14px;
+  background: #252525;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.directory-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.directory-item {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.directory-item:hover {
+  background: #282828;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.directory-item.active-p1 {
+  background: rgba(233, 84, 32, 0.15);
+  border-color: var(--ubuntu-orange);
+}
+
+/* ==========================================================================
+   Window 4: Physical RAM & Swap Disk
+   ========================================================================== */
+.memory-progress-wrapper {
+  padding: 12px 16px;
+  background: #1B1B1B;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.yaru-progress-track {
+  width: 100%;
+  height: 8px;
+  background: #2A2A2A;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.yaru-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38B44A, #E95420);
+  transition: width 0.3s ease;
+}
+
+.section-title {
+  padding: 10px 16px 4px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.frames-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
+.frame-card {
+  background: #1E1E1E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.frame-card.frame-occupied {
+  border-color: rgba(56, 180, 74, 0.4);
+  background: #1c261e;
+}
+
+.frame-card.frame-active-access {
+  border-color: var(--ubuntu-orange);
+  box-shadow: 0 0 16px var(--ubuntu-orange-glow);
+  transform: scale(1.04);
+}
+
+.frame-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.frame-num { color: #A0A0A0; }
+
+.frame-badge {
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.badge-in-use { background: var(--ubuntu-green); color: #fff; }
+.badge-free { background: #333; color: #888; }
+
+.frame-vpn {
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.frame-flags {
+  display: flex;
+  gap: 4px;
+}
+
+.frame-metric {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.swap-blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  padding: 10px 16px;
+}
+
+.swap-tile {
+  height: 40px;
+  border-radius: 6px;
+  background: #1A1A1A;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.swap-tile.swap-occupied {
+  background: #2a1b29;
+  border-color: var(--ubuntu-aubergine-light);
+  color: #f0abfc;
+}
+
+/* ==========================================================================
+   Window 5: Ubuntu Bash Terminal
+   ========================================================================== */
+.terminal-body {
+  flex: 1;
+  background: #0C0C0C;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #CCCCCC;
+  overflow-y: auto;
+  cursor: text;
+}
+
+.term-line {
+  margin-bottom: 3px;
+  word-break: break-all;
+}
+
+.term-prompt {
+  user-select: none;
+}
+
+.term-prompt .user { color: #4ade80; font-weight: 700; }
+.term-prompt .path { color: #60a5fa; font-weight: 700; }
+
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+}
+
+#term-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.term-bold { font-weight: 700; }
+.term-orange { color: var(--ubuntu-orange); }
+.term-yellow { color: #facc15; }
+.term-green { color: #4ade80; }
+.term-cyan { color: #38bdf8; }
+.term-red { color: #f87171; }
+.term-dim { color: #666666; }
+
+/* ==========================================================================
+   Window 6: Performance & Analytics
+   ========================================================================== */
+.analytics-grid {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.kpi-card {
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.kpi-val {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin: 4px 0;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.chart-box {
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.chart-canvas-wrapper {
+  position: relative;
+  height: 200px;
+  width: 100%;
+}
+
+.chart-donut-wrapper {
+  height: 200px;
+}
+
+.eat-explorer-card {
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.section-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.eat-sliders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.slider-group {
+  background: #181818;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.slider-val {
+  color: var(--ubuntu-orange);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.eat-calc-output {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.formula-box {
+  padding: 8px 12px;
+  background: #141414;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #93c5fd;
+}
+
+.eat-result-banner {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eat-overhead-pill {
+  padding: 4px 10px;
+  background: rgba(233, 84, 32, 0.2);
+  color: var(--ubuntu-orange);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Window 7: Workloads Studio
+   ========================================================================== */
+.workloads-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.preset-card {
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.preset-card:hover {
+  border-color: rgba(233, 84, 32, 0.4);
+  transform: translateY(-2px);
+}
+
+.preset-icon { font-size: 24px; }
+.preset-title { font-size: 13px; font-weight: 700; }
+.preset-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+.trace-dual-pane {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.trace-table-pane, .trace-editor-pane {
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.editor-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.trace-table-wrapper {
+  height: 220px;
+}
+
+.yaru-textarea {
+  height: 170px;
+  resize: vertical;
+}
+
+/* ==========================================================================
+   Window 8 & 9: Hardware Config & Docs
+   ========================================================================== */
+.config-modal-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.config-section {
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.field-help {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.geometry-summary-box {
+  background: #161616;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-header {
+  font-weight: 700;
+  color: var(--ubuntu-orange);
+  margin-bottom: 2px;
+}
+
+.config-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Docs Handbook */
+.docs-wrapper {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: 100%;
+}
+
+.docs-sidebar {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 8px;
+  background: #1E1E1E;
+}
+
+.docs-nav {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.docs-nav a {
+  display: block;
+  padding: 8px 10px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 12px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.docs-nav a:hover, .docs-nav li.active a {
+  background: rgba(233, 84, 32, 0.15);
+  color: var(--ubuntu-orange);
+  font-weight: 600;
+}
+
+.docs-content {
+  padding: 20px 24px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.doc-section {
+  margin-bottom: 28px;
+}
+
+.doc-section h2 {
+  font-size: 17px;
+  color: var(--ubuntu-orange);
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.doc-callout {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(233, 84, 32, 0.1);
+  border-left: 3px solid var(--ubuntu-orange);
+}
+
+.doc-ordered-list {
+  padding-left: 20px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
